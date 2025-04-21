@@ -6,6 +6,7 @@ using UnityEngine;
 public class NewBehaviourScript : MonoBehaviour
 {
     public float MaxSpeed;
+    public float JumpPower;
 
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
@@ -20,6 +21,13 @@ public class NewBehaviourScript : MonoBehaviour
 
     private void Update()
     {
+        // Jump
+        if (Input.GetButtonDown("Jump") && !animator.GetBool("isJumping"))
+        {
+            rigid.AddForce(Vector2.up * JumpPower, ForceMode2D.Impulse);
+            animator.SetBool("isJumping", true);
+        }
+
         // Stop Speed
         if (Input.GetButtonUp("Horizontal"))
             rigid.velocity = new Vector2(rigid.velocity.normalized.x * 0.5f, rigid.velocity.y);
@@ -42,9 +50,22 @@ public class NewBehaviourScript : MonoBehaviour
         var h = Input.GetAxisRaw("Horizontal");
         rigid.AddForce(Vector2.right * h, ForceMode2D.Impulse);
 
+        // Max Speed
         if (rigid.velocity.x > MaxSpeed) // Right Max Speed
             rigid.velocity = new Vector2(MaxSpeed, rigid.velocity.y);
         else if (rigid.velocity.x < MaxSpeed * -1)
             rigid.velocity = new Vector2(MaxSpeed * -1, rigid.velocity.y);
+
+        // Landing Platform
+        if (rigid.velocity.y < 0)
+        {
+            Debug.DrawRay(rigid.position, Vector3.down, new Color(0, 1, 0));
+            RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Platform"));
+            if (rayHit.collider != null)
+            {
+                if (rayHit.distance < 0.5f)
+                    animator.SetBool("isJumping", false);
+            }
+        }
     }
 }
